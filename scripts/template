@@ -1,0 +1,76 @@
+tproxy-port: 9898
+mixed-port: 7890
+mode: rule
+allow-lan: true
+unified-delay: true
+bind-address: '*'
+log-level: warning
+ipv6: false
+geodata-mode: true
+external-controller: 0.0.0.0:9090
+external-ui: dashboard/dist
+tcp-concurrent: false
+interface-name: ""
+enable-process: false
+geodata-loader: memconservative
+inbound-tfo: false
+secret: ""
+# geox-url: {mmdb: "", geoip: "", geosite: ""}
+profile:
+  store-selected: true
+  store-fake-ip: false
+experimental: {
+    sniff-tls-sni: false,
+    fingerprint: ""
+}
+sniffer:
+  enable: false
+  sniffing:
+    - tls
+    - http
+  force-domain:
+    - '+'
+  skip-domain: 
+    - '+.google.com'
+  port-whitelist:
+    - 443
+    - 80
+hosts: {
+  "cacerts.digicert.com": "104.21.21.147",
+  "ota.googlezip.net": "127.0.0.1",
+  "ota-cache1.googlezip.net": "127.0.0.1",
+  "ota-cache2.googlezip.net": "127.0.0.1"
+}
+tun:
+  enable: false
+  device: Meta
+  stack: system
+  dns-hijack:
+    - any:53
+  auto-route: false
+  auto-detect-interface: false
+dns:
+  enable: true
+  ipv6: true
+  prefer-h3: false
+  default-nameserver:
+    - 8.8.8.8
+  listen: 0.0.0.0:1053
+  use-hosts: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter: [
+    "*.local",
+    "*.localhost",
+  ]
+  nameserver:
+    - '9.9.9.9'               # Quad9
+    - '1.1.1.1'               # Cloudflare
+    - '8.8.4.4'               # Google
+#  fallback: []
+#  fallback-filter:
+#    geoip: false
+#    geoip-code: "!ID"
+#    geosite: []
+#    ipcidr: []
+#    domain: []
