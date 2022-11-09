@@ -1,7 +1,7 @@
 id=ClashForMagisk
 name=Clash for Magisk
-version=v2.3
+version=v1.0
 versionCode=20221110
-author=t🌸amarin
-description= Use iptables to support Clash's transparent proxy. Hey, damn half-crippled Android!!!
-updateJson=https://github.com/taamarin/ClashforMagisk/raw/master/update.json
+author=豆沙
+description= 利用tproxy支持Clash.Meta的透明代理.
+updateJson=https://github.com/mikanxx/Clash_for_Magisk/raw/master/update.json
