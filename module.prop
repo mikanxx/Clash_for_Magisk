@@ -1,6 +1,6 @@
 id=ClashForMagisk
 name=Clash for Magisk
-version=v1.0
+version=v1.1
 versionCode=20221110
 author=豆沙
 description= 利用tproxy支持Clash.Meta的透明代理.
