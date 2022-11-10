@@ -1,0 +1,291 @@
+proxies:
+
+#此处用来放本地免流配置，本地免流只能免80/443端口的TCP，其他连接（包括所有udp）不行
+  - name: 百度
+    type: http
+    server: 157.0.148.53
+    port: 443
+    headers:
+      X-T5-Auth: "1962898709"
+      User-Agent: "baiduboxapp"
+
+proxy-providers:
+
+  airport:
+    type: http
+    # 本地节点
+    url: ""
+    interval: 3600
+    path: "./proxy_providers/airport.yaml"
+    health-check:
+      enable: true
+      interval: 60
+      url: http://www.gstatic.com/generate_204
+
+  airport1:
+    type: http
+    # 国内机场
+    url: ""
+    interval: 3600
+    path: "./proxy_providers/airport1.yaml"
+    health-check:
+      enable: true
+      interval: 60
+      url: http://www.gstatic.com/generate_204
+  
+  airport2:
+    type: http
+    # 海外机场
+    url: ""
+    interval: 3600
+    path: "./proxy_providers/airport2.yaml"
+    health-check:
+      enable: true
+      interval: 60
+      url: http://www.gstatic.com/generate_204
+  
+proxy-groups:
+  - name: 🚀 中国代理
+    type: select
+    proxies:
+      - 🎯 全球直连
+      - 百度
+    use:
+      - airport
+  - name: 🎯 科学上网
+    type: select
+    proxies:
+      - ♻️ 自动选择
+    use:
+      - airport
+      - airport1
+      - airport2
+  - name: ♻️ 自动选择
+    type: url-test
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    use:
+      - airport1
+      - airport2
+  - name: 🎥 NETFLIX
+    type: select
+    proxies:
+      - 🎯 科学上网
+      - ♻️ 自动选择
+      - 🚀 中国代理
+    use:
+      - airport1
+      - airport2
+  - name: ⛔️ 广告拦截
+    type: select
+    proxies:
+      - 🛑 全球拦截
+      - 🚀 中国代理
+      - 🎯 科学上网
+  - name: 🚫 运营劫持
+    type: select
+    proxies:
+      - 🛑 全球拦截
+      - 🚀 中国代理
+      - 🎯 科学上网
+  - name: 🌍 国外媒体
+    type: select
+    proxies:
+      - 🎯 科学上网
+      - ♻️ 自动选择
+      - 🚀 中国代理
+    use:
+      - airport1
+      - airport2
+  - name: 🌏 国内媒体
+    type: select
+    proxies:
+      - 🚀 中国代理
+      - 🎯 科学上网
+    use:
+      - airport1
+      - airport2
+  - name: Ⓜ️ 微软服务
+    type: select
+    proxies:
+      - 🚀 中国代理
+      - 🎯 科学上网
+    use:
+      - airport1
+      - airport2
+  - name: 📲 电报信息
+    type: select
+    proxies:
+      - 🎯 科学上网
+      - 🚀 中国代理
+    use:
+      - airport1
+      - airport2
+  - name: 🍎 苹果服务
+    type: select
+    proxies:
+      - 🎯 科学上网
+      - 🚀 中国代理
+      - ♻️ 自动选择
+    use:
+      - airport1
+      - airport2
+  - name: 🎯 全球直连
+    type: select
+    proxies:
+      - DIRECT
+  - name: 🛑 全球拦截
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+  - name: 🐟 漏网之鱼
+    type: select
+    proxies:
+      - 🚀 中国代理
+      - 🎯 科学上网
+      - ♻️ 自动选择
+    use:
+      - airport
+      - airport1
+      - airport2
+
+rule-providers:
+  Unbreak:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Unbreak.yaml
+    url: https://cdn.jsdelivr.net/gh/DivineEngine/Profiles@master/Clash/RuleSet/Unbreak.yaml
+    interval: 86400
+  Advertising:
+    type: http
+    behavior: domain
+    path: ./RuleSet/Advertising.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Advertising/Advertising_Domain.yaml
+    interval: 86400
+  Advertising-antiAD:
+    type: http
+    behavior: domain
+    path: ./RuleSet/Advertising-antiAD.yaml
+    url: https://anti-ad.net/clash.yaml
+    interval: 86400
+  Apple:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Apple.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Apple/Apple.yaml
+    interval: 86400
+  Microsoft:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Microsoft.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Microsoft/Microsoft.yaml
+    interval: 86400
+  Nintendo:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Nintendo.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Nintendo/Nintendo.yaml
+    interval: 86400
+  Notion:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Notion.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Notion/Notion.yaml
+    interval: 86400
+  SteamCN:
+    type: http
+    behavior: classical
+    path: ./RuleSet/SteamCN.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/SteamCN/SteamCN.yaml
+    interval: 86400
+  Telegram:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Telegram.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Telegram/Telegram.yaml
+    interval: 86400
+  Spotify:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Spotify.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Spotify/Spotify.yaml
+    interval: 86400
+  Netflix:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Netflix.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Netflix/Netflix.yaml
+    interval: 86400
+  Bahamut:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Bahamut.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Bahamut/Bahamut.yaml
+    interval: 86400
+  Streaming:
+    type: http
+    behavior: domain
+    path: ./RuleSet/Streaming.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/GlobalMedia/GlobalMedia_Domain.yaml
+    interval: 86400
+  Global:
+    type: http
+    behavior: domain
+    path: ./RuleSet/Global.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Global/Global_Domain.yaml
+    interval: 86400
+  China:
+    type: http
+    behavior: domain
+    path: ./RuleSet/China.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/China/China_Domain.yaml
+    interval: 86400
+rules:
+  # 域名规则
+  # 特殊域名放行
+  - DOMAIN-KEYWORD,announce,🎯 全球直连
+  - DOMAIN-KEYWORD,torrent,🎯 全球直连
+  - DOMAIN-KEYWORD,tracker,🎯 全球直连
+  - DOMAIN-SUFFIX,smtp,🎯 全球直连
+  - DOMAIN-SUFFIX,local,🎯 全球直连
+  # 抢跑规则
+  - GEOSITE,bytedance@!cn,🚀 中国代理
+  # GEOSITE 直连放行
+  - GEOSITE,category-games@cn,🚀 中国代理
+  - GEOSITE,bytedance,🚀 中国代理
+  - GEOSITE,bilibili,🚀 中国代理
+  - GEOSITE,douyu,🚀 中国代理
+  - GEOSITE,huya,🚀 中国代理
+  - GEOSITE,tencent,🚀 中国代理
+  - GEOSITE,apple-cn,🚀 中国代理
+  - GEOSITE,ehentai,🚀 中国代理
+  # 强制直连域名
+  - DOMAIN-SUFFIX,'bidiys.cc',🚀 中国代理
+  - DOMAIN-SUFFIX,'81.cn',🚀 中国代理
+  - DOMAIN-SUFFIX,'xinhuanet.com',🚀 中国代理
+  - DOMAIN-SUFFIX,'news.cn',🚀 中国代理
+  - DOMAIN-SUFFIX,'ypojie.com',🚀 中国代理
+  # IP 规则
+  - GEOIP,PRIVATE,🎯 全球直连,no-resolve
+  # Advertising
+  - RULE-SET,Advertising,🛑 全球拦截
+  - RULE-SET,Advertising-antiAD,🛑 全球拦截
+  # Telegram
+  - RULE-SET,Telegram,📲 电报信息
+  # Apple
+  - RULE-SET,Apple,🍎 苹果服务
+  # Microsoft
+  - RULE-SET,Microsoft,Ⓜ️ 微软服务
+  # mosdns 规则
+  - IP-CIDR,120.53.53.53/32,🚀 中国代理,no-resolve
+  - IP-CIDR,223.5.5.5/32,🚀 中国代理,no-resolve
+  - IP-CIDR,8.8.4.4/32,🎯 科学上网,no-resolve
+  - IP-CIDR,1.0.0.1/32,🎯 科学上网,no-resolve
+  # Global SET
+  - RULE-SET,Global,🎯 科学上网
+  # China SET
+  - RULE-SET,China,🚀 中国代理
+  # 兜底规则
+  - GEOIP,CN,🚀 中国代理
+  - MATCH,🐟 漏网之鱼
