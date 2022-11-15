@@ -206,12 +206,14 @@ start_tproxy() {
   done
 
   # 绕过保留地址
+  ${iptables_wait} -t mangle -A CLASH_LOCAL -p udp --dport 53 -j RETURN
     for subnet in ${reserved_ip[@]} ; do
       ${iptables_wait} -t mangle -A CLASH_LOCAL -d ${subnet} -j RETURN
     done
 
     if [ "${ipv6}" == "true" ]
     then
+        ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p udp --dport 53 -j RETURN
         for subnet in ${reserved_ip6[@]} ; do
           ${ip6tables_wait} -t mangle -A CLASH_LOCAL -d ${subnet} -j RETURN
         done
