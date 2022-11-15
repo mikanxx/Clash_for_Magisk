@@ -98,14 +98,22 @@ start_tproxy() {
   # 路由规则
   ip rule add fwmark ${mark_id} lookup ${mark_id}
   ip route add local default dev lo table ${mark_id}
-  ip -6 rule add fwmark ${mark_id} lookup ${mark_id}
-  ip -6 route add local default dev lo table ${mark_id}
+  
+    if [ "${ipv6}" == "true" ]
+    then
+        ip -6 rule add fwmark ${mark_id} lookup ${mark_id}
+        ip -6 route add local default dev lo table ${mark_id}
+	fi
 
   # CLASH_EXTERNAL 链负责处理转发流量
   ${iptables_wait} -t mangle -N CLASH_EXTERNAL
   ${iptables_wait} -t mangle -F CLASH_EXTERNAL
-  ${ip6tables_wait} -t mangle -N CLASH_EXTERNAL
-  ${ip6tables_wait} -t mangle -F CLASH_EXTERNAL
+  
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -N CLASH_EXTERNAL
+        ${ip6tables_wait} -t mangle -F CLASH_EXTERNAL
+	fi
 
   # 跳过标记为 ${routing_mark} 的 Clash 的本身流量防止回环(安卓环境下不建议)
   # ${iptables_wait} -t mangle -A CLASH_EXTERNAL -j RETURN -m mark --mark ${routing_mark}
@@ -115,27 +123,43 @@ start_tproxy() {
   # It might need more complicated solution.
   ${iptables_wait} -t mangle -I CLASH_EXTERNAL -i rmnet_data+ -j RETURN
   ${iptables_wait} -t mangle -I CLASH_EXTERNAL -i ccmni+ -j RETURN
-  ${ip6tables_wait} -t mangle -I CLASH_EXTERNAL -i rmnet_data+ -j RETURN
-  ${ip6tables_wait} -t mangle -I CLASH_EXTERNAL -i ccmni+ -j RETURN
+  
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -I CLASH_EXTERNAL -i rmnet_data+ -j RETURN
+        ${ip6tables_wait} -t mangle -I CLASH_EXTERNAL -i ccmni+ -j RETURN
+	fi
 
   # 目标地址为局域网或保留地址的流量跳过处理
     for subnet in ${reserved_ip[@]} ; do
       ${iptables_wait} -t mangle -A CLASH_EXTERNAL -d ${subnet} -j RETURN
     done
-    for subnet in ${reserved_ip6[@]} ; do
-      ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -d ${subnet} -j RETURN
-    done
+	
+    if [ "${ipv6}" == "true" ]
+    then
+        for subnet in ${reserved_ip6[@]} ; do
+          ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -d ${subnet} -j RETURN
+        done
+	fi
     
   ${iptables_wait} -t mangle -A CLASH_EXTERNAL -p tcp -j TPROXY --on-ip 127.0.0.1 --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
   ${iptables_wait} -t mangle -A CLASH_EXTERNAL -p udp -j TPROXY --on-ip 127.0.0.1 --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
-  ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p tcp -j TPROXY --on-ip ::1 --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
-  ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p udp -j TPROXY --on-ip ::1 --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
+  
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p tcp -j TPROXY --on-ip ::1 --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
+        ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p udp -j TPROXY --on-ip ::1 --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
+	fi
 
   # 其他所有流量转向到 ${tproxy_port} 端口，并打上 mark
   ${iptables_wait} -t mangle -A CLASH_EXTERNAL -p tcp -i lo -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
   ${iptables_wait} -t mangle -A CLASH_EXTERNAL -p udp -i lo -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
-  ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p tcp -i lo -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
-  ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p udp -i lo -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
+
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p tcp -i lo -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
+        ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p udp -i lo -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
+	fi
 
   # 允许AP接口
   # 注意: 老款 Android 设备可能只有一个 wlan 接口
@@ -143,24 +167,42 @@ start_tproxy() {
   for ap in ${ap_list[@]} ; do
     ${iptables_wait} -t mangle -A CLASH_EXTERNAL -p tcp -i ${ap} -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
     ${iptables_wait} -t mangle -A CLASH_EXTERNAL -p udp -i ${ap} -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
-    ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p tcp -i ${ap} -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
-    ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p udp -i ${ap} -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
+	
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p tcp -i ${ap} -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
+        ${ip6tables_wait} -t mangle -A CLASH_EXTERNAL -p udp -i ${ap} -j TPROXY --on-port ${Clash_tproxy_port} --tproxy-mark ${mark_id}
+	fi
+
   done
 
   # 最后让所有流量通过 CLASH_EXTERNAL 链进行处理
   ${iptables_wait} -t mangle -I PREROUTING -j CLASH_EXTERNAL
-  ${ip6tables_wait} -t mangle -I PREROUTING -j CLASH_EXTERNAL
+  
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -I PREROUTING -j CLASH_EXTERNAL
+	fi
 
   # CLASH_LOCAL 链负责处理本机发出的流量
   ${iptables_wait} -t mangle -N CLASH_LOCAL
   ${iptables_wait} -t mangle -F CLASH_LOCAL
-  ${ip6tables_wait} -t mangle -N CLASH_LOCAL
-  ${ip6tables_wait} -t mangle -F CLASH_LOCAL
+  
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -N CLASH_LOCAL
+        ${ip6tables_wait} -t mangle -F CLASH_LOCAL
+	fi
 
   # 绕过已忽略接口
   for ignore in ${ignore_out_list[@]} ; do
     ${iptables_wait} -t mangle -I CLASH_LOCAL -o ${ignore} -j RETURN
-    ${ip6tables_wait} -t mangle -I CLASH_LOCAL -o ${ignore} -j RETURN
+	
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -I CLASH_LOCAL -o ${ignore} -j RETURN
+	fi
+
   done
 
   # 绕过保留地址
@@ -168,33 +210,54 @@ start_tproxy() {
       ${iptables_wait} -t mangle -A CLASH_LOCAL -d ${subnet} -j RETURN
     done
 
-    for subnet in ${reserved_ip6[@]} ; do
-      ${ip6tables_wait} -t mangle -A CLASH_LOCAL -d ${subnet} -j RETURN
-    done
+    if [ "${ipv6}" == "true" ]
+    then
+        for subnet in ${reserved_ip6[@]} ; do
+          ${ip6tables_wait} -t mangle -A CLASH_LOCAL -d ${subnet} -j RETURN
+        done
+	fi
 
   # 跳过 Clash 程序本身发出的流量, 防止回环
   ${iptables_wait} -t mangle -I CLASH_LOCAL -m owner --uid-owner 0 --gid-owner 3005 -j RETURN
-  ${ip6tables_wait} -t mangle -I CLASH_LOCAL -m owner --uid-owner 0 --gid-owner 3005 -j RETURN
+  
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -I CLASH_LOCAL -m owner --uid-owner 0 --gid-owner 3005 -j RETURN
+	fi
 
   if [ "${mode}" = "blacklist" ] ; then
     if [ "$(cat ${filter_packages_file[@]})" = "" ] ; then
       # 全部通过路由
       ${iptables_wait} -t mangle -A CLASH_LOCAL -p tcp -j MARK --set-mark ${mark_id}
       ${iptables_wait} -t mangle -A CLASH_LOCAL -p udp -j MARK --set-mark ${mark_id}
-      ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p tcp -j MARK --set-mark ${mark_id}
-      ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p udp -j MARK --set-mark ${mark_id}
+
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p tcp -j MARK --set-mark ${mark_id}
+        ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p udp -j MARK --set-mark ${mark_id}
+	fi
+
       log "[info] transparent proxy for all apps."
     else
       # 绕过App
       for appid in $(cat ${appuid_file[@]}) ; do
         ${iptables_wait} -t mangle -I CLASH_LOCAL -m owner --uid-owner ${appid} -j RETURN
-        ${ip6tables_wait} -t mangle -I CLASH_LOCAL -m owner --uid-owner ${appid} -j RETURN
+
+        if [ "${ipv6}" == "true" ]
+        then
+            ${ip6tables_wait} -t mangle -I CLASH_LOCAL -m owner --uid-owner ${appid} -j RETURN
+		fi
+		
       done
       # 允许非App
       ${iptables_wait} -t mangle -A CLASH_LOCAL -p tcp -j MARK --set-mark ${mark_id}
       ${iptables_wait} -t mangle -A CLASH_LOCAL -p udp -j MARK --set-mark ${mark_id}
-      ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p tcp -j MARK --set-mark ${mark_id}
-      ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p udp -j MARK --set-mark ${mark_id}
+
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p tcp -j MARK --set-mark ${mark_id}
+        ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p udp -j MARK --set-mark ${mark_id}
+	fi
       logs "[info] proxy mode: ${mode} "
       for package in $(cat ${filter_packages_file[@]}) ; do
         echo -n "${package} / " >> ${CFM_logs_file}
@@ -207,17 +270,25 @@ start_tproxy() {
     for appid in $(cat ${appuid_file[@]}) ; do
       ${iptables_wait} -t mangle -A CLASH_LOCAL -p tcp -m owner --uid-owner ${appid} -j MARK --set-mark ${mark_id}
       ${iptables_wait} -t mangle -A CLASH_LOCAL -p udp -m owner --uid-owner ${appid} -j MARK --set-mark ${mark_id}
-      ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p tcp -m owner --uid-owner ${appid} -j MARK --set-mark ${mark_id}
-      ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p udp -m owner --uid-owner ${appid} -j MARK --set-mark ${mark_id}
+	  
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p tcp -m owner --uid-owner ${appid} -j MARK --set-mark ${mark_id}
+        ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p udp -m owner --uid-owner ${appid} -j MARK --set-mark ${mark_id}
+	fi
     done
     ${iptables_wait} -t mangle -A CLASH_LOCAL -p tcp -m owner --uid-owner 0 -j MARK --set-mark ${mark_id}
     ${iptables_wait} -t mangle -A CLASH_LOCAL -p udp -m owner --uid-owner 0 -j MARK --set-mark ${mark_id}
     ${iptables_wait} -t mangle -A CLASH_LOCAL -p tcp -m owner --uid-owner 1052 -j MARK --set-mark ${mark_id}
     ${iptables_wait} -t mangle -A CLASH_LOCAL -p udp -m owner --uid-owner 1052 -j MARK --set-mark ${mark_id}
-    ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p tcp -m owner --uid-owner 0 -j MARK --set-mark ${mark_id}
-    ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p udp -m owner --uid-owner 0 -j MARK --set-mark ${mark_id}
-    ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p tcp -m owner --uid-owner 1052 -j MARK --set-mark ${mark_id}
-    ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p udp -m owner --uid-owner 1052 -j MARK --set-mark ${mark_id}
+
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p tcp -m owner --uid-owner 0 -j MARK --set-mark ${mark_id}
+        ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p udp -m owner --uid-owner 0 -j MARK --set-mark ${mark_id}
+        ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p tcp -m owner --uid-owner 1052 -j MARK --set-mark ${mark_id}
+        ${ip6tables_wait} -t mangle -A CLASH_LOCAL -p udp -m owner --uid-owner 1052 -j MARK --set-mark ${mark_id}
+	fi
     logs "[info] proxy mode: ${mode} "
     for package in $(cat ${filter_packages_file[@]}) ; do
       echo -n "${package} / " >> ${CFM_logs_file}
@@ -228,25 +299,45 @@ start_tproxy() {
   # 让本机发出的流量跳转到 CLASH_LOCAL
   # CLASH_LOCAL 链会为本机流量打 mark, 打过 mark 的流量会重新回到 PREROUTING 链上
   ${iptables_wait} -t mangle -I OUTPUT -j CLASH_LOCAL
-  ${ip6tables_wait} -t mangle -I OUTPUT -j CLASH_LOCAL
+  
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -I OUTPUT -j CLASH_LOCAL
+	fi
 
   # 新建 DIVERT 规则，避免已有连接的包二次通过 TPROXY，理论上有一定的性能提升
   ${iptables_wait} -t mangle -N DIVERT
   ${iptables_wait} -t mangle -F DIVERT
-  ${ip6tables_wait} -t mangle -N DIVERT
-  ${ip6tables_wait} -t mangle -F DIVERT
+
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -N DIVERT
+        ${ip6tables_wait} -t mangle -F DIVERT
+	fi
 
   ${iptables_wait} -t mangle -A DIVERT -j MARK --set-mark ${mark_id}
   ${iptables_wait} -t mangle -A DIVERT -j ACCEPT
-  ${ip6tables_wait} -t mangle -A DIVERT -j MARK --set-mark ${mark_id}
-  ${ip6tables_wait} -t mangle -A DIVERT -j ACCEPT
+
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -A DIVERT -j MARK --set-mark ${mark_id}
+        ${ip6tables_wait} -t mangle -A DIVERT -j ACCEPT
+	fi
 
   ${iptables_wait} -t mangle -I PREROUTING -p tcp -m socket -j DIVERT
-  ${ip6tables_wait} -t mangle -I PREROUTING -p tcp -m socket -j DIVERT
+
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -I PREROUTING -p tcp -m socket -j DIVERT
+	fi
 
   # 本机直接访问 ${Clash_tproxy_port} 会回环. 见 https://github.com/Dreamacro/clash/issues/425
   ${iptables_wait} -A OUTPUT -d 127.0.0.1 -p tcp -m owner --uid-owner 0 --gid-owner 3005 -m tcp --dport ${Clash_tproxy_port} -j REJECT
-  ${ip6tables_wait} -A OUTPUT -d ::1 -p tcp -m owner --uid-owner 0 --gid-owner 3005 -m tcp --dport ${Clash_tproxy_port} -j REJECT
+
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -A OUTPUT -d ::1 -p tcp -m owner --uid-owner 0 --gid-owner 3005 -m tcp --dport ${Clash_tproxy_port} -j REJECT
+	fi
 
     # CLASH_DNS_EXTERNAL 链负责处理转发 DNS 流量
     ${iptables_wait} -t nat -N CLASH_DNS_EXTERNAL
@@ -275,8 +366,12 @@ start_tproxy() {
 stop_tproxy() {
   ip rule del fwmark ${mark_id} table ${mark_id}
   ip route del local default dev lo table ${mark_id}
-  ip -6 rule del fwmark ${mark_id} table ${mark_id}
-  ip -6 route del local default dev lo table ${mark_id}
+  
+    if [ "${ipv6}" == "true" ]
+    then
+        ip -6 rule del fwmark ${mark_id} table ${mark_id}
+        ip -6 route del local default dev lo table ${mark_id}
+	fi
 
   ${iptables_wait} -t mangle -D PREROUTING -j CLASH_EXTERNAL
     
@@ -308,22 +403,25 @@ stop_tproxy() {
   ${iptables_wait} -t nat -D OUTPUT -d ${Clash_fake_ip_range} -p icmp -j DNAT --to-destination 127.0.0.1
   ${iptables_wait} -t nat -D PREROUTING -d ${Clash_fake_ip_range} -p icmp -j DNAT --to-destination 127.0.0.1
 
-  ${ip6tables_wait} -t mangle -D PREROUTING -j CLASH_EXTERNAL
+    if [ "${ipv6}" == "true" ]
+    then
+        ${ip6tables_wait} -t mangle -D PREROUTING -j CLASH_EXTERNAL
     
-  ${ip6tables_wait} -t mangle -D PREROUTING -p tcp -m socket -j DIVERT
+        ${ip6tables_wait} -t mangle -D PREROUTING -p tcp -m socket -j DIVERT
 
-  ${ip6tables_wait} -t mangle -D OUTPUT -j CLASH_LOCAL
+        ${ip6tables_wait} -t mangle -D OUTPUT -j CLASH_LOCAL
 
-  ${ip6tables_wait} -t mangle -F CLASH_EXTERNAL
-  ${ip6tables_wait} -t mangle -X CLASH_EXTERNAL
+        ${ip6tables_wait} -t mangle -F CLASH_EXTERNAL
+        ${ip6tables_wait} -t mangle -X CLASH_EXTERNAL
 
-  ${ip6tables_wait} -t mangle -F CLASH_LOCAL
-  ${ip6tables_wait} -t mangle -X CLASH_LOCAL
+        ${ip6tables_wait} -t mangle -F CLASH_LOCAL
+        ${ip6tables_wait} -t mangle -X CLASH_LOCAL
 
-  ${ip6tables_wait} -t mangle -F DIVERT
-  ${ip6tables_wait} -t mangle -X DIVERT
+        ${ip6tables_wait} -t mangle -F DIVERT
+        ${ip6tables_wait} -t mangle -X DIVERT
 
-  ${ip6tables_wait} -D OUTPUT -d ::1 -p tcp -m owner --uid-owner 0 --gid-owner 3005 -m tcp --dport ${Clash_tproxy_port} -j REJECT
+        ${ip6tables_wait} -D OUTPUT -d ::1 -p tcp -m owner --uid-owner 0 --gid-owner 3005 -m tcp --dport ${Clash_tproxy_port} -j REJECT
+    fi
 
 }
 
